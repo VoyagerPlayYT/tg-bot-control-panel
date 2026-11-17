@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Bot Control Panel — Панель управления ботом</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        tg: {
+                            blue: '#24A1DE',
+                            dark: '#17212B',
+                            card: '#232E3C',
+                            border: '#2E3A4A'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-[#0E1621] text-slate-100 min-h-screen flex flex-col font-sans">
+    <!-- Header -->
+    <header class="border-b border-[#242F3D] bg-[#17212B] sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-[#24A1DE] flex items-center justify-center text-white text-xl shadow-lg shadow-[#24A1DE]/20">
+                    ✈️
+                </div>
+                <div>
+                    <h1 class="font-bold text-base sm:text-lg leading-tight flex items-center space-x-2">
+                        <span>Telegram Bot Control Hub</span>
+                        <span class="text-xs font-mono px-2 py-0.5 rounded bg-blue-900/50 text-[#24A1DE] border border-[#24A1DE]/30">v3.1</span>
+                    </h1>
+                    <p class="text-xs text-slate-400" id="botName">@HomeMaster_OrchestratorBot</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-3">
+                <div id="statusBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span id="statusText">ONLINE</span>
+                </div>
+                <button onclick="controlBot('restart')" class="px-3 py-1.5 rounded-lg bg-[#242F3D] hover:bg-[#2B394A] text-xs text-slate-200 border border-slate-700 flex items-center space-x-1 transition">
+                    <span>🔄 Перезапуск</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 space-y-6">
+        <!-- Top KPI Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-[#17212B] border border-[#242F3D] rounded-2xl p-4">
+                <div class="text-xs text-slate-400 font-semibold mb-1">ОБРАБОТАНО СООБЩЕНИЙ</div>
+                <div class="text-2xl font-black text-white font-mono" id="statMessages">1,420</div>
+                <div class="text-[11px] text-emerald-400 mt-2 font-mono">↑ 100% без сбоев</div>
+            </div>
+            <div class="bg-[#17212B] border border-[#242F3D] rounded-2xl p-4">
+                <div class="text-xs text-slate-400 font-semibold mb-1">ПОДПИСЧИКОВ / ПОЛЬЗОВАТЕЛЕЙ</div>
+                <div class="text-2xl font-black text-[#24A1DE] font-mono" id="statUsers">5</div>
+                <div class="text-[11px] text-slate-400 mt-2">Семейные учетные записи</div>
+            </div>
+            <div class="bg-[#17212B] border border-[#242F3D] rounded-2xl p-4">
+                <div class="text-xs text-slate-400 font-semibold mb-1">РЕЖИМ ПОЛУЧЕНИЯ</div>
+                <div class="text-sm font-bold text-slate-200 mt-1" id="statMode">Long Polling</div>
+                <div class="text-[11px] text-slate-400 mt-2">Zero-Config Port Forward</div>
+            </div>
+            <div class="bg-[#17212B] border border-[#242F3D] rounded-2xl p-4">
+                <div class="text-xs text-slate-400 font-semibold mb-1">ВРЕМЯ СТАРТА</div>
+                <div class="text-xs font-mono text-slate-300 mt-1 truncate" id="statStartedAt">2026-11-17 12:00:00</div>
+                <div class="text-[11px] text-slate-400 mt-2">Выделенный процесс демона</div>
+            </div>
+        </div>
+
+        <!-- Middle Grid: Simulator & Broadcast -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Interactive Chat Emulator (7 cols) -->
+            <div class="lg:col-span-7 bg-[#17212B] border border-[#242F3D] rounded-2xl p-5 flex flex-col shadow-xl">
+                <div class="flex justify-between items-center pb-3 border-b border-[#242F3D] mb-4">
+                    <h3 class="font-bold text-sm text-slate-200 flex items-center space-x-2">
+                        <span>💬 Интерактивный эмулятор Telegram</span>
+                        <span class="text-[10px] bg-blue-900/60 text-[#24A1DE] px-2 py-0.5 rounded">Живой тест команд</span>
+                    </h3>
+                    <div class="flex space-x-1">
+                        <button onclick="sendSimulatedCommand('/start')" class="text-xs bg-[#242F3D] hover:bg-[#2B394A] px-2 py-1 rounded text-slate-300">/start</button>
+                        <button onclick="sendSimulatedCommand('/status')" class="text-xs bg-[#242F3D] hover:bg-[#2B394A] px-2 py-1 rounded text-slate-300">/status</button>
+                        <button onclick="sendSimulatedCommand('/ping')" class="text-xs bg-[#242F3D] hover:bg-[#2B394A] px-2 py-1 rounded text-slate-300">/ping</button>
+                        <button onclick="sendSimulatedCommand('/backup')" class="text-xs bg-[#242F3D] hover:bg-[#2B394A] px-2 py-1 rounded text-slate-300">/backup</button>
+                    </div>
+                </div>
+
+                <!-- Chat history -->
+                <div id="chatHistory" class="flex-1 space-y-3 overflow-y-auto max-h-[350px] p-2 bg-[#0E1621] rounded-xl border border-[#242F3D]/80">
+                    <div class="flex justify-start">
+                        <div class="bg-[#182533] border border-[#242F3D] rounded-2xl rounded-tl-none p-3 text-xs max-w-md text-slate-200">
+                            👋 Бот в сети. Вы можете отправлять команды или нажимать быстрые кнопки вверху для демонстрации ответов.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input -->
+                <form onsubmit="handleChatSubmit(event)" class="mt-4 flex gap-2">
+                    <input type="text" id="chatCmdInput" placeholder="Введите команду (/start, /ping, /help, /tasks)..."
+                        class="flex-1 bg-[#0E1621] border border-[#242F3D] rounded-xl px-4 py-2 text-xs text-white focus:outline-none focus:border-[#24A1DE]">
+                    <button type="submit" class="bg-[#24A1DE] hover:bg-[#1D8AC0] text-white px-4 py-2 rounded-xl text-xs font-bold transition">
+                        Отправить
+                    </button>
+                </form>
+            </div>
+
+            <!-- Right: Broadcast announcement (5 cols) -->
+            <div class="lg:col-span-5 bg-[#17212B] border border-[#242F3D] rounded-2xl p-5 flex flex-col shadow-xl">
+                <h3 class="font-bold text-sm text-slate-200 mb-2 flex items-center space-x-2">
+                    <span>📢 Модуль массовых оповещений (Broadcast)</span>
+                </h3>
+                <p class="text-xs text-slate-400 mb-4">
+                    Отправка срочного системного уведомления или напоминания всем подключенным семейным чатам и каналам.
+                </p>
+
+                <form onsubmit="handleBroadcast(event)" class="space-y-3 flex-1 flex flex-col">
+                    <textarea id="broadcastText" rows="5" required placeholder="Введите текст оповещения для семьи (например: 'Плановое обновление сервера через 10 минут')..."
+                        class="w-full bg-[#0E1621] border border-[#242F3D] rounded-xl p-3 text-xs text-white focus:outline-none focus:border-[#24A1DE] resize-none"></textarea>
+
+                    <div class="flex items-center justify-between text-xs text-slate-400">
+                        <span>Получателей: <strong class="text-white" id="broadcastRecipientsCount">5 пользователей</strong></span>
+                        <span class="text-emerald-400 font-mono">Шифрование SSL/TLS</span>
+                    </div>
+
+                    <button type="submit" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-lg shadow-blue-600/20">
+                        🚀 Разослать оповещение
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bottom Grid: Logs & Subscribers -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Logs (8 cols) -->
+            <div class="lg:col-span-8 bg-[#17212B] border border-[#242F3D] rounded-2xl p-5 shadow-xl">
+                <div class="flex justify-between items-center pb-3 border-b border-[#242F3D] mb-3">
+                    <h3 class="font-bold text-sm text-slate-200">📜 Системный журнал событий (Live Logs)</h3>
+                    <button onclick="fetchLogs()" class="text-xs text-[#24A1DE] hover:underline">Обновить</button>
+                </div>
+                <div id="logsContainer" class="font-mono text-[11px] space-y-1.5 max-h-[220px] overflow-y-auto">
+                    <!-- Logs stream -->
+                </div>
+            </div>
+
+            <!-- Subscribers (4 cols) -->
+            <div class="lg:col-span-4 bg-[#17212B] border border-[#242F3D] rounded-2xl p-5 shadow-xl">
+                <h3 class="font-bold text-sm text-slate-200 pb-3 border-b border-[#242F3D] mb-3">
+                    👥 Семейные подписчики
+                </h3>
+                <div id="subscribersList" class="space-y-2 max-h-[220px] overflow-y-auto">
+                    <!-- Dynamic subscribers -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const levelColors = {
+            'INFO': 'text-cyan-400',
+            'SUCCESS': 'text-emerald-400 font-bold',
+            'WARN': 'text-amber-400 font-bold',
+            'ERROR': 'text-rose-400 font-bold'
+        };
+
+        async function fetchStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                document.getElementById('botName').innerText = data.name;
+                document.getElementById('statMessages').innerText = data.total_messages.toLocaleString();
+                document.getElementById('statMode').innerText = data.mode;
+                document.getElementById('statStartedAt').innerText = data.started_at;
+                document.getElementById('statusText').innerText = data.status;
+
+                const badge = document.getElementById('statusBadge');
+                if (data.status === 'ONLINE') {
+                    badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center space-x-1.5';
+                } else {
+                    badge.className = 'px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 border border-rose-500/30 text-rose-400 flex items-center space-x-1.5';
+                }
+            } catch (e) {}
+        }
+
+        async function fetchLogs() {
+            try {
+                const res = await fetch('/api/logs');
+                const data = await res.json();
+                const container = document.getElementById('logsContainer');
+                container.innerHTML = data.logs.map(l => `
+                    <div class="flex items-start space-x-2 py-0.5">
+                        <span class="text-slate-500">[${l.time}]</span>
+                        <span class="${levelColors[l.level] || 'text-slate-300'} w-14 shrink-0">${l.level}</span>
+                        <span class="text-slate-300">${escapeHtml(l.msg)}</span>
+                    </div>
+                `).join('');
+            } catch (e) {}
+        }
+
+        async function fetchSubscribers() {
+            try {
+                const res = await fetch('/api/subscribers');
+                const data = await res.json();
+                document.getElementById('statUsers').innerText = data.subscribers.length;
+                document.getElementById('broadcastRecipientsCount').innerText = `${data.subscribers.length} пользователей`;
+
+                const list = document.getElementById('subscribersList');
+                list.innerHTML = data.subscribers.map(s => `
+                    <div class="p-2.5 rounded-xl bg-[#0E1621] border border-[#242F3D] flex justify-between items-center text-xs">
+                        <div>
+                            <div class="font-bold text-slate-200">${escapeHtml(s.full_name)}</div>
+                            <div class="text-[10px] text-[#24A1DE] font-mono">${s.username}</div>
+                        </div>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-[#242F3D] text-slate-300">${s.role}</span>
+                    </div>
+                `).join('');
+            } catch (e) {}
+        }
+
+        async function controlBot(action) {
+            await fetch('/api/bot/control', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ action })
+            });
+            fetchStatus();
+            fetchLogs();
+        }
+
+        async function handleBroadcast(e) {
+            e.preventDefault();
+            const text = document.getElementById('broadcastText').value;
+            if (!text.trim()) return;
+
+            const res = await fetch('/api/broadcast', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ message: text })
+            });
+            const data = await res.json();
+            alert(`✅ Рассылка успешно отправлена ${data.recipients} адресатам!`);
+            document.getElementById('broadcastText').value = '';
+            fetchStatus();
+            fetchLogs();
+        }
+
+        async function sendSimulatedCommand(cmd) {
+            document.getElementById('chatCmdInput').value = cmd;
+            handleChatSubmit(new Event('submit'));
+        }
+
+        async function handleChatSubmit(e) {
+            if (e) e.preventDefault();
+            const input = document.getElementById('chatCmdInput');
+            const cmd = input.value.trim();
+            if (!cmd) return;
+
+            const chatHistory = document.getElementById('chatHistory');
+
+            // Render user command
+            chatHistory.innerHTML += `
+                <div class="flex justify-end">
+                    <div class="bg-[#2B5278] rounded-2xl rounded-tr-none p-2.5 text-xs text-white max-w-xs shadow">
+                        ${escapeHtml(cmd)}
+                    </div>
+                </div>
+            `;
+            input.value = '';
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+
+            const res = await fetch('/api/simulate-chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ command: cmd })
+            });
+            const data = await res.json();
+
+            // Render bot answer
+            chatHistory.innerHTML += `
+                <div class="flex justify-start">
+                    <div class="bg-[#182533] border border-[#242F3D] rounded-2xl rounded-tl-none p-3 text-xs max-w-md text-slate-200 whitespace-pre-line shadow">
+                        ${escapeHtml(data.reply)}
+                    </div>
+                </div>
+            `;
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+            fetchStatus();
+            fetchLogs();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        fetchStatus();
+        fetchLogs();
+        fetchSubscribers();
+        setInterval(fetchLogs, 3000);
+        setInterval(fetchStatus, 4000);
+    </script>
+</body>
+</html>
