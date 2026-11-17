@@ -109,7 +109,7 @@ class SimulateMessageRequest(BaseModel):
 
 @app.get("/", response_class=HTMLResponse)
 async def admin_page(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="index.html", context={"request": request})
 
 
 @app.get("/api/status")
